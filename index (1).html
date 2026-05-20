@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loto Kreyòl</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { background: #000; color: #fff; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app { width: 100%; max-width: 380px; padding: 15px; text-align: center; }
+        .machine-zone { position: relative; width: 340px; height: 380px; margin: auto; }
+        canvas { position: absolute; top: 70px; left: 10px; width: 210px; height: 210px; border-radius: 50%; background: radial-gradient(circle, #222, #000); border: 4px solid #333; z-index: 5; }
+        .pvc-u-tube { position: absolute; top: 30px; right: 30px; width: 150px; height: 320px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); border-radius: 0 80px 80px 0; border-left: none; z-index: 1; }
+        .pvc-bottom { position: absolute; bottom: 30px; left: 10px; width: 230px; height: 60px; background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 30px; display: flex; justify-content: space-around; align-items: center; z-index: 6; }
+        .slot { width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .rolling-ball { position: absolute; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; font-size: 16px; z-index: 100; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5); opacity: 0; }
+        .ui-card { background: #111; padding: 15px; border-radius: 20px; border: 1px solid #222; margin-top: 10px; }
+        .field { text-align: left; margin-bottom: 12px; }
+        label { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 18px; text-align: center; outline: none; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        button { width: 100%; background: linear-gradient(#f00, #900); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #500; text-transform: uppercase; margin-top: 10px; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { width: 85%; background: #1a1a1a; border: 2px solid #f00; border-radius: 20px; padding: 25px; text-align: center; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-m { flex: 1; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="machine-zone">
+        <canvas id="canvas" width="210" height="210"></canvas>
+        <div class="pvc-u-tube"></div>
+        <div id="ball-actor" class="rolling-ball"></div>
+        <div class="pvc-bottom">
+            <div class="slot" id="s0"></div>
+            <div class="slot" id="s1"></div>
+            <div class="slot" id="s2"></div>
+        </div>
+    </div>
+
+    <div class="ui-card">
+        <div class="field">
+            <label>Nimewo Ou Yo</label>
+            <input type="text" id="user-nums" inputmode="numeric" placeholder="00 00 00" maxlength="8">
+        </div>
+
+        <div class="grid-3">
+            <div class="field">
+                <label>Miz</label>
+                <input type="number" id="edittextmiz" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="field">
+                <label>Peye</label>
+                <input type="text" id="edittextpeye" value="0" readonly style="color: #00ff00;">
+            </div>
+            <div class="field">
+                <label>Genyen</label>
+                <input type="text" id="edittextgenyen" value="0" readonly style="color: #ffcc00;">
+            </div>
+        </div>
+
+        <button id="draw-btn">KÒMANSE TIRAJ</button>
+    </div>
+</div>
+
+<div id="modal">
+    <div class="modal-card" id="modal-content"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const ballActor = document.getElementById("ball-actor");
+    const drawBtn = document.getElementById("draw-btn");
+    
+    const inputNums = document.getElementById("user-nums");
+    const inputMiz = document.getElementById("edittextmiz");
+    const inputPeye = document.getElementById("edittextpeye");
+    const inputGenyen = document.getElementById("edittextgenyen");
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modal-content");
+
+    let balls = [];
+    let isLive = false;
+    const globe = { x: 105, y: 105, r: 100 };
+
+    class Ball {
+        constructor(n) {
+            this.n = n < 10 ? "0"+n : ""+n;
+            this.r = 10;
+            this.color = `hsl(${Math.random()*360}, 75%, 60%)`;
+            this.reset();
+        }
+        reset() {
+            this.x = globe.x + (Math.random()-.5)*140;
+            this.y = globe.y + (Math.random()-.5)*140;
+            this.vx = (Math.random()-.5)*8;
+            this.vy = (Math.random()-.5)*8;
+            this.visible = true;
+        }
+        update() {
+            if(!this.visible) return;
+            let spd = isLive ? 2.5 : 0.4;
+            this.vx += (Math.random()-.5)*spd;
+            this.vy += (Math.random()-.5)*spd;
+            this.x += this.vx; this.y += this.vy;
+            let d = Math.hypot(this.x - globe.x, this.y - globe.y);
+            if(d + this.r > globe.r) {
+                let a = Math.atan2(this.y - globe.y, this.x - globe.x);
+                this.x = globe.x + Math.cos(a)*(globe.r - this.r);
+                this.y = globe.y + Math.sin(a)*(globe.r - this.r);
+                this.vx *= -0.8; this.vy *= -0.8;
+            }
+        }
+        draw() {
+            if(!this.visible) return;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+            ctx.fillStyle = this.color; ctx.fill();
+            ctx.fillStyle = "#fff"; ctx.font = "bold 9px Arial"; ctx.textAlign = "center";
+            ctx.fillText(this.n, this.x, this.y+3);
+        }
+    }
+
+    function init() {
+        balls = Array.from({length: 50}, (_, i) => new Ball(i+1));
+        loop();
+    }
+
+    function loop() {
+        ctx.clearRect(0,0,210,210);
+        balls.forEach(b => { b.update(); b.draw(); });
+        requestAnimationFrame(loop);
+    }
+
+    inputNums.addEventListener("input", (e) => {
+        let v = e.target.value.replace(/\D/g, "");
+        let r = "";
+        for(let i=0; i<v.length && i<6; i++) {
+            if(i>0 && i%2===0) r += " ";
+            r += v[i];
+        }
+        e.target.value = r;
+    });
+
+    drawBtn.onclick = () => {
+        const mizVal = inputMiz.value;
+        if(inputNums.value.length < 8 || !mizVal || mizVal <= 0) return;
+        
+        modal.style.display = "flex";
+        modalContent.innerHTML = `
+            <h2 style="color:#fff">KONFIMASYON</h2>
+            <p style="margin: 20px 0; font-size: 18px;">Tiraj sa a koute w <b>${mizVal} HTG</b>. Èske w dako?</p>
+            <div class="btn-row">
+                <button class="btn-m" style="background:#f00; color:#fff" onclick="modal.style.display='none'">NON</button>
+                <button class="btn-m" style="background:#0f0; color:#000" id="btn-confirm-wi">WI</button>
+            </div>
+        `;
+        
+        // Atache evènman WI an dirèkteman
+        document.getElementById("btn-confirm-wi").onclick = confirmStart;
+    };
+
+    function confirmStart() {
+        // 1. Pran valè nan edittextmiz
+        const mizVal = inputMiz.value;
+        
+        // 2. FÒSE valè a antre nan edittextpeye touswit
+        inputPeye.value = mizVal.toString();
+        
+        // 3. Reset lòt bagay yo
+        modal.style.display = "none";
+        drawBtn.disabled = true;
+        isLive = true;
+        inputGenyen.value = "0";
+
+        for(let i=0; i<3; i++) {
+            const s = document.getElementById("s"+i);
+            s.innerText = ""; s.style.background = "transparent";
+        }
+
+        let res = [];
+        setTimeout(() => animateBall(0, res), 2000);
+        setTimeout(() => animateBall(1, res), 5000);
+        setTimeout(() => animateBall(2, res), 8000);
+    }
+
+    function animateBall(idx, resArr) {
+        let pool = balls.filter(b => b.visible);
+        let b = pool[Math.floor(Math.random()*pool.length)];
+        b.visible = false;
+        resArr.push(b.n);
+
+        ballActor.innerText = b.n;
+        ballActor.style.background = b.color;
+        ballActor.style.opacity = "1";
+        ballActor.style.transition = "none";
+        ballActor.style.top = "70px"; ballActor.style.left = "110px";
+
+        setTimeout(() => { ballActor.style.transition = "all 0.6s ease-out"; ballActor.style.top = "30px"; ballActor.style.left = "280px"; }, 100);
+        setTimeout(() => { ballActor.style.transition = "all 0.8s ease-in"; ballActor.style.top = "280px"; }, 800);
+        setTimeout(() => { ballActor.style.transition = "all 0.5s ease-out"; ballActor.style.top = "310px"; ballActor.style.left = "240px"; }, 1600);
+        setTimeout(() => {
+            const target = document.getElementById("s"+idx).getBoundingClientRect();
+            const machine = document.querySelector(".machine-zone").getBoundingClientRect();
+            ballActor.style.transition = "all 0.7s cubic-bezier(0.18, 0.89, 0.32, 1.28)";
+            ballActor.style.left = (target.left - machine.left) + "px";
+        }, 2100);
+
+        setTimeout(() => {
+            ballActor.style.opacity = "0";
+            const s = document.getElementById("s"+idx);
+            s.innerText = b.n;
+            s.style.background = b.color;
+            if(resArr.length === 3) finishGame(resArr);
+        }, 2900);
+    }
+
+    function finishGame(res) {
+        isLive = false;
+        const mizVal = parseFloat(inputPeye.value) || 0;
+        const mine = inputNums.value.split(" ");
+        let totalWin = 0;
+
+        if(mine.includes(res[0])) totalWin += mizVal * 100;
+        if(mine.includes(res[1])) totalWin += mizVal * 50;
+        if(mine.includes(res[2])) totalWin += mizVal * 25;
+
+        // Mete nan edittextgenyen
+        inputGenyen.value = totalWin.toString();
+
+        setTimeout(() => {
+            modal.style.display = "flex";
+            modalContent.innerHTML = `
+                <h1 style="font-size:50px; margin:15px 0; color:#fff;">${res.join("-")}</h1>
+                <h2 style="color:${totalWin>0?'#0f0':'#f44'}">${totalWin>0?"OU GENYEN: "+totalWin+" HTG":"OU PA GENYEN"}</h2>
+                <button class="btn-m" style="background:#f00; color:#fff; margin-top:20px;" onclick="modal.style.display='none'">OK</button>
+            `;
+            drawBtn.disabled = false;
+        }, 1000);
+    }
+
+    init();
+</script>
+</body>
+</html>
