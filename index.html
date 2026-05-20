@@ -30,7 +30,7 @@
     <div id="modal">
         <div class="card" id="modal-content">
             <h2 style="color:#f00; margin-top:0;">EROBLACK STRIKE</h2>
-            <p>Touye 100 avion lènmi. Chak bezwen 5 bal!</p>
+            <p>Touye 100 avion lènmi. Chak bezwen 7 bal!</p>
             <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
             <input type="number" id="miz-input" value="10">
             <button onclick="startGame()">LANCE MISYON</button>
@@ -55,13 +55,13 @@
     let bullets = [];
     let enemies = [];
     
-    // Tèks Background
+    // Tèks Background EROBLACK
     let bgTexts = [];
-    for(let i=0; i<15; i++) {
+    for(let i=0; i<12; i++) {
         bgTexts.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            s: 0.5 + Math.random()
+            s: 0.7 + Math.random() * 0.5
         });
     }
 
@@ -85,7 +85,7 @@
         enemies.push({
             x: Math.random() * (canvas.width - 60) + 30,
             y: -60,
-            hp: 5, // CHANJE SOU 5 BAL
+            hp: 7, // CHAK ENMI MOURI SOU 7 BAL
             speed: 0.8 + Math.random() * 0.7
         });
         enemiesCreated++;
@@ -128,13 +128,16 @@
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Background EROBLACK
-        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.font = "bold 20px Arial";
+        // Draw Background EROBLACK (Koulè Cyan vizib)
+        ctx.font = "bold 22px Arial";
         bgTexts.forEach(t => {
+            ctx.fillStyle = "rgba(0, 255, 255, 0.15)"; // Koulè Cyan ak opasite bèl
             ctx.fillText("EROBLACK", t.x, t.y);
             t.y += t.s;
-            if(t.y > canvas.height) { t.y = -20; t.x = Math.random() * canvas.width; }
+            if(t.y > canvas.height) { 
+                t.y = -30; 
+                t.x = Math.random() * (canvas.width - 50); 
+            }
         });
 
         // Player
@@ -144,7 +147,7 @@
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.y -= b.speed;
-            ctx.fillStyle = "#0ff";
+            ctx.fillStyle = "#ffff00"; // Bal jòn pou pi bon vizibilite
             ctx.fillRect(b.x - 2, b.y, 4, 15);
             if (b.y < 0) bullets.splice(i, 1);
         }
