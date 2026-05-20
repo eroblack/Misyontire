@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Eroblack Mission 100</title>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; text-align: center; }
-        canvas { display: block; background: #050505; }
+        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; text-align: center; }
+        canvas { display: block; background: #000; margin: 0 auto; }
         #ui-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-around; z-index: 10; pointer-events: none; }
-        .stat-box { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; border: 1px solid #333; min-width: 80px; }
-        .label { font-size: 10px; color: #888; display: block; text-transform: uppercase; }
+        .stat-box { background: rgba(0,0,0,0.7); padding: 8px; border-radius: 10px; border: 1px solid #444; min-width: 80px; }
+        .label { font-size: 10px; color: #aaa; display: block; text-transform: uppercase; }
         .val { font-size: 18px; font-weight: bold; color: #0f0; }
         
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .card { width: 85%; background: #1a1a1a; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
-        input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #444; color: #fff; text-align: center; font-size: 24px; border-radius: 10px; outline: none; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .card { width: 85%; background: #222; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #555; color: #fff; text-align: center; font-size: 24px; border-radius: 10px; outline: none; }
         button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: #f00; color: #fff; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <div id="ui-top">
-        <div class="stat-box"><span class="label">Touye</span><span id="score">0</span>/100</div>
-        <div class="stat-box"><span class="label">Rete</span><span id="remain">125</span></div>
+        <div class="stat-box"><span class="label">TOUYE</span><span id="score">0</span>/100</div>
+        <div class="stat-box"><span class="label">RETE</span><span id="remain">125</span></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -30,8 +30,7 @@
     <div id="modal">
         <div class="card" id="modal-content">
             <h2 style="color:#f00; margin-top:0;">MISYON 100</h2>
-            <p>Touye 100 avion pou fè 10 fwa miz ou!</p>
-            <label style="font-size:12px; color:#aaa;">ANTRE MIZ OU (HTG)</label>
+            <p>Touye 100 avion (10 bal chak) pou fè 10X miz ou!</p>
             <input type="number" id="miz-input" value="10">
             <button onclick="startGame()">KÒMANSE JWE</button>
         </div>
@@ -40,6 +39,8 @@
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    
+    // Ajiste gwosè canvas la
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -51,18 +52,17 @@
     const TOTAL_ENEMIES = 125;
     const TARGET = 100;
 
-    const player = { x: canvas.width/2 - 25, y: canvas.height - 120, w: 50, h: 50 };
-    const bullets = [];
-    const enemies = [];
+    const player = { x: canvas.width/2 - 25, y: canvas.height - 100, w: 50, h: 50 };
+    let bullets = [];
+    let enemies = [];
 
     function sendToApp(bwat, val) {
         if (window.Android) { window.Android.voyeKòb(bwat, val.toString()); }
-        console.log(bwat + " : " + val);
     }
 
     function startGame() {
         mizFinal = document.getElementById('miz-input').value;
-        if(mizFinal <= 0) { alert("Mete yon miz!"); return; }
+        if(mizFinal <= 0) return;
         
         sendToApp("peye", mizFinal);
         sendToApp("genyen", "0");
@@ -70,55 +70,63 @@
         document.getElementById('modal').style.display = "none";
         gameActive = true;
         
-        // Kòmanse voye lènmi yo
-        spawnEnemy();
+        // RESET DATA
+        score = 0;
+        enemiesCreated = 0;
+        enemiesFinished = 0;
+        enemies = [];
+        bullets = [];
+        
+        spawnEnemy(); // Kòmanse kreye avion
+        update();     // Kòmanse animasyon an
     }
 
     function spawnEnemy() {
         if (!gameActive || enemiesCreated >= TOTAL_ENEMIES) return;
 
         enemies.push({
-            x: Math.random() * (canvas.width - 45),
-            y: -50,
-            w: 45,
+            x: Math.random() * (canvas.width - 40),
+            y: -60,
+            w: 40,
             h: 40,
             hp: 10,
-            speed: 1.5 + (Math.random() * 2) 
+            speed: 2 + Math.random() * 2
         });
 
         enemiesCreated++;
         document.getElementById('remain').innerText = (TOTAL_ENEMIES - enemiesCreated);
-
-        // Tan ant chak lènmi (1 segonn)
+        
+        // Yon lènmi chak segonn
         setTimeout(spawnEnemy, 1000);
     }
 
-    // Tirer otomatik
+    // Tirer automatique
     setInterval(() => {
         if (gameActive) {
             bullets.push({ x: player.x + 22, y: player.y, w: 6, h: 15, speed: 12 });
         }
-    }, 180);
+    }, 200);
 
-    // Kontwòl ak dwèt
+    // Kontwòl Touch
     window.addEventListener("touchmove", (e) => {
         if(!gameActive) return;
-        player.x = e.touches[0].clientX - 25;
-        player.y = e.touches[0].clientY - 25;
+        let touch = e.touches[0];
+        player.x = touch.clientX - 25;
+        player.y = touch.clientY - 25;
         e.preventDefault();
     }, {passive: false});
 
     function update() {
         if (!gameActive) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "#000"; // Netwaye canvas la
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Player (Veso a)
+        // Player (Veso Wouj)
         ctx.fillStyle = "#f00";
         ctx.fillRect(player.x, player.y, player.w, player.h);
-        ctx.strokeStyle = "#fff";
-        ctx.strokeRect(player.x, player.y, player.w, player.h);
 
-        // Bal yo
+        // Bal (Ble)
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.y -= b.speed;
@@ -127,24 +135,24 @@
             if (b.y < 0) bullets.splice(i, 1);
         }
 
-        // Lènmi yo (Avion yo)
+        // Avion (Lènmi)
         for (let i = enemies.length - 1; i >= 0; i--) {
             let en = enemies[i];
             en.y += en.speed;
             
-            // Desen Avion
-            ctx.fillStyle = "#333";
+            // Desen Avion an
+            ctx.fillStyle = "#555";
             ctx.fillRect(en.x, en.y, en.w, en.h);
-            ctx.strokeStyle = "#ff0";
+            ctx.strokeStyle = "#fff";
             ctx.strokeRect(en.x, en.y, en.w, en.h);
             
-            // HP
+            // Nimewo lavi (HP)
             ctx.fillStyle = "#fff";
-            ctx.font = "bold 14px Arial";
+            ctx.font = "bold 16px Arial";
             ctx.textAlign = "center";
             ctx.fillText(en.hp, en.x + en.w/2, en.y + 25);
 
-            // Collision Bal ak Avion
+            // Collision Bal
             for (let j = bullets.length - 1; j >= 0; j--) {
                 let b = bullets[j];
                 if (b.x < en.x + en.w && b.x + b.w > en.x && b.y < en.y + en.h && b.y + b.h > en.y) {
@@ -161,18 +169,19 @@
                 }
             }
 
-            // Si avion an depase ekran an
+            // Si lènmi an depase ekran an
             if (en && en.y > canvas.height) {
                 enemies.splice(i, 1);
                 enemiesFinished++;
                 checkFinish();
             }
 
-            // Si player touche avion
+            // Si lènmi touche Player
             if (en && player.x < en.x + en.w && player.x + player.w > en.x && player.y < en.y + en.h && player.y + player.h > en.y) {
                 gameOver();
             }
         }
+        
         requestAnimationFrame(update);
     }
 
@@ -191,14 +200,12 @@
 
         document.getElementById('modal').style.display = "flex";
         document.getElementById('modal-content').innerHTML = `
-            <h1 style="color:${won ? '#0f0' : '#f00'}; font-size:40px;">${won ? 'VIKTWA!' : 'OU PÈDI'}</h1>
-            <p style="font-size:20px;">Ou touye: <b style="color:#0f0">${score}</b>/125</p>
-            <h2 style="background:#000; padding:15px; border-radius:10px;">Ganyen: ${gain} HTG</h2>
-            <button onclick="location.reload()" style="margin-top:10px;">REKÒMANSE</button>
+            <h1 style="color:${won ? '#0f0' : '#f00'}">${won ? 'VIKTWA!' : 'OU PÈDI'}</h1>
+            <p>Ou touye ${score} avion sou 125</p>
+            <h2 style="background:#111; padding:10px;">GANYEN: ${gain} HTG</h2>
+            <button onclick="location.reload()">REKÒMANSE</button>
         `;
     }
-
-    update();
 </script>
 </body>
 </html>
