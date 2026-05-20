@@ -3,44 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eroblack Mission 100</title>
+    <title>Eroblack Air Strike - Slow Mode</title>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; text-align: center; }
-        canvas { display: block; background: #000; margin: 0 auto; }
+        body { margin: 0; background: #000b1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; text-align: center; }
+        canvas { display: block; background: radial-gradient(circle, #001533, #000); margin: 0 auto; }
         #ui-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-around; z-index: 10; pointer-events: none; }
-        .stat-box { background: rgba(0,0,0,0.7); padding: 8px; border-radius: 10px; border: 1px solid #444; min-width: 80px; }
-        .label { font-size: 10px; color: #aaa; display: block; text-transform: uppercase; }
-        .val { font-size: 18px; font-weight: bold; color: #0f0; }
+        .stat-box { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 12px; border: 1px solid #00ffff; min-width: 90px; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+        .label { font-size: 10px; color: #00ffff; display: block; text-transform: uppercase; letter-spacing: 1px; }
+        .val { font-size: 20px; font-weight: bold; color: #fff; }
         
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .card { width: 85%; background: #222; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
-        input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #555; color: #fff; text-align: center; font-size: 24px; border-radius: 10px; outline: none; }
-        button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: #f00; color: #fff; text-transform: uppercase; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .card { width: 85%; background: #111; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px #f00; }
+        input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #555; color: #0f0; text-align: center; font-size: 24px; border-radius: 10px; font-weight: bold; }
+        button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: linear-gradient(#f00, #900); color: #fff; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <div id="ui-top">
-        <div class="stat-box"><span class="label">TOUYE</span><span id="score">0</span>/100</div>
-        <div class="stat-box"><span class="label">RETE</span><span id="remain">125</span></div>
+        <div class="stat-box"><span class="label">TOUYE</span><span id="score" class="val">0</span>/100</div>
+        <div class="stat-box"><span class="label">RETE</span><span id="remain" class="val">125</span></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <div id="modal">
         <div class="card" id="modal-content">
-            <h2 style="color:#f00; margin-top:0;">MISYON 100</h2>
-            <p>Touye 100 avion (10 bal chak) pou fè 10X miz ou!</p>
+            <h2 style="color:#f00; margin-top:0;">AIR STRIKE 100</h2>
+            <p>Touye 100 avion lènmi. Yo chak bezwen 10 bal!</p>
+            <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
             <input type="number" id="miz-input" value="10">
-            <button onclick="startGame()">KÒMANSE JWE</button>
+            <button onclick="startGame()">LANCE MISYON</button>
         </div>
     </div>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    
-    // Ajiste gwosè canvas la
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -52,7 +51,7 @@
     const TOTAL_ENEMIES = 125;
     const TARGET = 100;
 
-    const player = { x: canvas.width/2 - 25, y: canvas.height - 100, w: 50, h: 50 };
+    let player = { x: canvas.width/2, y: canvas.height - 100, w: 50, h: 50 };
     let bullets = [];
     let enemies = [];
 
@@ -63,99 +62,93 @@
     function startGame() {
         mizFinal = document.getElementById('miz-input').value;
         if(mizFinal <= 0) return;
-        
         sendToApp("peye", mizFinal);
         sendToApp("genyen", "0");
-
         document.getElementById('modal').style.display = "none";
         gameActive = true;
-        
-        // RESET DATA
-        score = 0;
-        enemiesCreated = 0;
-        enemiesFinished = 0;
-        enemies = [];
-        bullets = [];
-        
-        spawnEnemy(); // Kòmanse kreye avion
-        update();     // Kòmanse animasyon an
+        spawnEnemy();
+        update();
     }
 
     function spawnEnemy() {
         if (!gameActive || enemiesCreated >= TOTAL_ENEMIES) return;
-
         enemies.push({
-            x: Math.random() * (canvas.width - 40),
+            x: Math.random() * (canvas.width - 60) + 30,
             y: -60,
-            w: 40,
-            h: 40,
-            hp: 10,
-            speed: 2 + Math.random() * 2
+            w: 50, h: 45, hp: 10,
+            speed: 0.8 + Math.random() * 0.7 // VITÈS DESANN: Dousman anpil kounye a
         });
-
         enemiesCreated++;
         document.getElementById('remain').innerText = (TOTAL_ENEMIES - enemiesCreated);
-        
-        // Yon lènmi chak segonn
-        setTimeout(spawnEnemy, 1000);
+        setTimeout(spawnEnemy, 1200);
     }
 
-    // Tirer automatique
+    // Tirer automatique (Bal rapid)
     setInterval(() => {
         if (gameActive) {
-            bullets.push({ x: player.x + 22, y: player.y, w: 6, h: 15, speed: 12 });
+            bullets.push({ x: player.x, y: player.y - 20, speed: 15 });
         }
-    }, 200);
+    }, 150);
 
-    // Kontwòl Touch
     window.addEventListener("touchmove", (e) => {
         if(!gameActive) return;
         let touch = e.touches[0];
-        player.x = touch.clientX - 25;
-        player.y = touch.clientY - 25;
+        player.x = touch.clientX;
+        player.y = touch.clientY;
         e.preventDefault();
     }, {passive: false});
 
+    function drawFighter(x, y, color, isEnemy) {
+        ctx.fillStyle = color;
+        // Kò avyon
+        ctx.beginPath();
+        if(isEnemy) {
+            ctx.moveTo(x, y + 25);
+            ctx.lineTo(x - 20, y - 15);
+            ctx.lineTo(x + 20, y - 15);
+        } else {
+            ctx.moveTo(x, y - 25);
+            ctx.lineTo(x - 20, y + 15);
+            ctx.lineTo(x + 20, y + 15);
+        }
+        ctx.fill();
+        // Zèl
+        ctx.fillRect(x - 25, y - 2, 50, 6);
+    }
+
     function update() {
         if (!gameActive) return;
-        
-        ctx.fillStyle = "#000"; // Netwaye canvas la
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Player (Veso Wouj)
-        ctx.fillStyle = "#f00";
-        ctx.fillRect(player.x, player.y, player.w, player.h);
+        // Player (Wouj)
+        drawFighter(player.x, player.y, "#f00", false);
 
-        // Bal (Ble)
+        // Bal (Ble fliyoresan)
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.y -= b.speed;
             ctx.fillStyle = "#0ff";
-            ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillRect(b.x - 2, b.y, 4, 15);
             if (b.y < 0) bullets.splice(i, 1);
         }
 
-        // Avion (Lènmi)
+        // Lènmi (Gri/Vèt)
         for (let i = enemies.length - 1; i >= 0; i--) {
             let en = enemies[i];
             en.y += en.speed;
             
-            // Desen Avion an
-            ctx.fillStyle = "#555";
-            ctx.fillRect(en.x, en.y, en.w, en.h);
-            ctx.strokeStyle = "#fff";
-            ctx.strokeRect(en.x, en.y, en.w, en.h);
+            drawFighter(en.x, en.y, "#555", true);
             
-            // Nimewo lavi (HP)
+            // HP Tèks
             ctx.fillStyle = "#fff";
-            ctx.font = "bold 16px Arial";
+            ctx.font = "bold 14px Arial";
             ctx.textAlign = "center";
-            ctx.fillText(en.hp, en.x + en.w/2, en.y + 25);
+            ctx.fillText(en.hp, en.x, en.y - 5);
 
-            // Collision Bal
+            // Collision
             for (let j = bullets.length - 1; j >= 0; j--) {
                 let b = bullets[j];
-                if (b.x < en.x + en.w && b.x + b.w > en.x && b.y < en.y + en.h && b.y + b.h > en.y) {
+                if (Math.abs(b.x - en.x) < 20 && Math.abs(b.y - en.y) < 20) {
                     en.hp--;
                     bullets.splice(j, 1);
                     if (en.hp <= 0) {
@@ -169,19 +162,16 @@
                 }
             }
 
-            // Si lènmi an depase ekran an
-            if (en && en.y > canvas.height) {
+            if (en && en.y > canvas.height + 50) {
                 enemies.splice(i, 1);
                 enemiesFinished++;
                 checkFinish();
             }
 
-            // Si lènmi touche Player
-            if (en && player.x < en.x + en.w && player.x + player.w > en.x && player.y < en.y + en.h && player.y + player.h > en.y) {
+            if (en && Math.abs(player.x - en.x) < 30 && Math.abs(player.y - en.y) < 30) {
                 gameOver();
             }
         }
-        
         requestAnimationFrame(update);
     }
 
@@ -195,14 +185,13 @@
         gameActive = false;
         let won = score >= TARGET;
         let gain = won ? (mizFinal * 10) : 0;
-
         sendToApp("genyen", gain);
 
         document.getElementById('modal').style.display = "flex";
         document.getElementById('modal-content').innerHTML = `
-            <h1 style="color:${won ? '#0f0' : '#f00'}">${won ? 'VIKTWA!' : 'OU PÈDI'}</h1>
-            <p>Ou touye ${score} avion sou 125</p>
-            <h2 style="background:#111; padding:10px;">GANYEN: ${gain} HTG</h2>
+            <h1 style="color:${won ? '#0f0' : '#f00'}">${won ? 'MISYON REYISI!' : 'OU PÈDI!'}</h1>
+            <p>Ou detwi ${score} avyon sou 125</p>
+            <h2 style="background:#000; padding:15px; border-radius:10px; color:#fff;">GANY: ${gain} HTG</h2>
             <button onclick="location.reload()">REKÒMANSE</button>
         `;
     }
