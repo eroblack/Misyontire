@@ -22,7 +22,7 @@
 
     <div id="ui-top">
         <div class="stat-box"><span class="label">TOUYE</span><span id="score" class="val">0</span>/100</div>
-        <div class="stat-box"><span class="label">RETE</span><span id="remain" class="val">125</span></div>
+        <div class="stat-box"><span class="label">RETE</span><span id="remain" class="val">105</span></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -30,7 +30,7 @@
     <div id="modal">
         <div class="card" id="modal-content">
             <h2 style="color:#f00; margin-top:0;">EROBLACK STRIKE</h2>
-            <p>Touye 100 avion lènmi. Chak bezwen 7 bal!</p>
+            <p>Touye 100 avion lènmi sou 105. Chak bezwen 7 bal!</p>
             <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
             <input type="number" id="miz-input" value="10">
             <button onclick="startGame()">LANCE MISYON</button>
@@ -48,7 +48,7 @@
     let enemiesFinished = 0;
     let gameActive = false;
     let mizFinal = 0;
-    const TOTAL_ENEMIES = 125;
+    const TOTAL_ENEMIES = 105; // CHANJE SOU 105
     const TARGET = 100;
 
     let player = { x: canvas.width/2, y: canvas.height - 100 };
@@ -85,7 +85,7 @@
         enemies.push({
             x: Math.random() * (canvas.width - 60) + 30,
             y: -60,
-            hp: 7, // CHAK ENMI MOURI SOU 7 BAL
+            hp: 7,
             speed: 0.8 + Math.random() * 0.7
         });
         enemiesCreated++;
@@ -128,10 +128,10 @@
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Background EROBLACK (Koulè Cyan vizib)
+        // Draw Background EROBLACK
         ctx.font = "bold 22px Arial";
         bgTexts.forEach(t => {
-            ctx.fillStyle = "rgba(0, 255, 255, 0.15)"; // Koulè Cyan ak opasite bèl
+            ctx.fillStyle = "rgba(0, 255, 255, 0.15)";
             ctx.fillText("EROBLACK", t.x, t.y);
             t.y += t.s;
             if(t.y > canvas.height) { 
@@ -147,7 +147,7 @@
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.y -= b.speed;
-            ctx.fillStyle = "#ffff00"; // Bal jòn pou pi bon vizibilite
+            ctx.fillStyle = "#ffff00";
             ctx.fillRect(b.x - 2, b.y, 4, 15);
             if (b.y < 0) bullets.splice(i, 1);
         }
@@ -205,7 +205,7 @@
         document.getElementById('modal').style.display = "flex";
         document.getElementById('modal-content').innerHTML = `
             <h1 style="color:${won ? '#0f0' : '#f00'}">${won ? 'MISYON REYISI!' : 'OU PÈDI!'}</h1>
-            <p>Ou detwi ${score} avyon sou 125</p>
+            <p>Ou detwi ${score} avyon sou ${TOTAL_ENEMIES}</p>
             <h2 style="background:#000; padding:15px; border-radius:10px; color:#fff;">GANY: ${gain} HTG</h2>
             <button onclick="location.reload()">REKÒMANSE</button>
         `;
