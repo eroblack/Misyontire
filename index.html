@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eroblack Air Strike - Slow Mode</title>
+    <title>Eroblack Air Strike</title>
     <style>
         body { margin: 0; background: #000b1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; text-align: center; }
-        canvas { display: block; background: radial-gradient(circle, #001533, #000); margin: 0 auto; }
+        canvas { display: block; background: #000; margin: 0 auto; }
         #ui-top { position: absolute; top: 10px; width: 100%; display: flex; justify-content: space-around; z-index: 10; pointer-events: none; }
         .stat-box { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 12px; border: 1px solid #00ffff; min-width: 90px; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
         .label { font-size: 10px; color: #00ffff; display: block; text-transform: uppercase; letter-spacing: 1px; }
@@ -29,8 +29,8 @@
 
     <div id="modal">
         <div class="card" id="modal-content">
-            <h2 style="color:#f00; margin-top:0;">AIR STRIKE 100</h2>
-            <p>Touye 100 avion lènmi. Yo chak bezwen 10 bal!</p>
+            <h2 style="color:#f00; margin-top:0;">EROBLACK STRIKE</h2>
+            <p>Touye 100 avion lènmi. Chak bezwen 5 bal!</p>
             <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
             <input type="number" id="miz-input" value="10">
             <button onclick="startGame()">LANCE MISYON</button>
@@ -51,9 +51,19 @@
     const TOTAL_ENEMIES = 125;
     const TARGET = 100;
 
-    let player = { x: canvas.width/2, y: canvas.height - 100, w: 50, h: 50 };
+    let player = { x: canvas.width/2, y: canvas.height - 100 };
     let bullets = [];
     let enemies = [];
+    
+    // Tèks Background
+    let bgTexts = [];
+    for(let i=0; i<15; i++) {
+        bgTexts.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            s: 0.5 + Math.random()
+        });
+    }
 
     function sendToApp(bwat, val) {
         if (window.Android) { window.Android.voyeKòb(bwat, val.toString()); }
@@ -75,15 +85,14 @@
         enemies.push({
             x: Math.random() * (canvas.width - 60) + 30,
             y: -60,
-            w: 50, h: 45, hp: 10,
-            speed: 0.8 + Math.random() * 0.7 // VITÈS DESANN: Dousman anpil kounye a
+            hp: 5, // CHANJE SOU 5 BAL
+            speed: 0.8 + Math.random() * 0.7
         });
         enemiesCreated++;
         document.getElementById('remain').innerText = (TOTAL_ENEMIES - enemiesCreated);
         setTimeout(spawnEnemy, 1200);
     }
 
-    // Tirer automatique (Bal rapid)
     setInterval(() => {
         if (gameActive) {
             bullets.push({ x: player.x, y: player.y - 20, speed: 15 });
@@ -100,7 +109,6 @@
 
     function drawFighter(x, y, color, isEnemy) {
         ctx.fillStyle = color;
-        // Kò avyon
         ctx.beginPath();
         if(isEnemy) {
             ctx.moveTo(x, y + 25);
@@ -112,18 +120,27 @@
             ctx.lineTo(x + 20, y + 15);
         }
         ctx.fill();
-        // Zèl
         ctx.fillRect(x - 25, y - 2, 50, 6);
     }
 
     function update() {
         if (!gameActive) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Player (Wouj)
+        // Draw Background EROBLACK
+        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.font = "bold 20px Arial";
+        bgTexts.forEach(t => {
+            ctx.fillText("EROBLACK", t.x, t.y);
+            t.y += t.s;
+            if(t.y > canvas.height) { t.y = -20; t.x = Math.random() * canvas.width; }
+        });
+
+        // Player
         drawFighter(player.x, player.y, "#f00", false);
 
-        // Bal (Ble fliyoresan)
+        // Bal
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.y -= b.speed;
@@ -132,20 +149,17 @@
             if (b.y < 0) bullets.splice(i, 1);
         }
 
-        // Lènmi (Gri/Vèt)
+        // Enmi
         for (let i = enemies.length - 1; i >= 0; i--) {
             let en = enemies[i];
             en.y += en.speed;
-            
             drawFighter(en.x, en.y, "#555", true);
             
-            // HP Tèks
             ctx.fillStyle = "#fff";
             ctx.font = "bold 14px Arial";
             ctx.textAlign = "center";
             ctx.fillText(en.hp, en.x, en.y - 5);
 
-            // Collision
             for (let j = bullets.length - 1; j >= 0; j--) {
                 let b = bullets[j];
                 if (Math.abs(b.x - en.x) < 20 && Math.abs(b.y - en.y) < 20) {
@@ -176,9 +190,7 @@
     }
 
     function checkFinish() {
-        if (enemiesFinished >= TOTAL_ENEMIES) {
-            gameOver();
-        }
+        if (enemiesFinished >= TOTAL_ENEMIES) gameOver();
     }
 
     function gameOver() {
