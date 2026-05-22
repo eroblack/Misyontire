@@ -13,10 +13,17 @@
         .val { font-size: 20px; font-weight: bold; color: #fff; }
         
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .card { width: 85%; background: #111; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px #f00; }
-        input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #555; color: #0f0; text-align: center; font-size: 24px; border-radius: 10px; font-weight: bold; }
-        button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: linear-gradient(#f00, #900); color: #fff; text-transform: uppercase; }
-        #fraz-miz { font-size: 15px; color: #ffff00; font-weight: bold; margin: 15px 0; letter-spacing: 0.5px; }
+        .card { width: 85%; background: #111; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px #f00; max-height: 85vh; overflow-y: auto; }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #555; color: #0f0; text-align: center; font-size: 24px; border-radius: 10px; font-weight: bold; }
+        
+        /* Zòn Bouton Miz yo */
+        .miz-buttons-container { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+        .btn-miz { flex: 1; min-width: 55px; padding: 10px 5px; background: #222; border: 1px solid #00ffff; color: #00ffff; font-weight: bold; border-radius: 8px; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-miz:active { background: #00ffff; color: #000; }
+
+        button.btn-lanse { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: linear-gradient(#f00, #900); color: #fff; text-transform: uppercase; margin-top: 10px; }
+        #fraz-miz { font-size: 14px; color: #ffff00; font-weight: bold; margin: 10px 0; letter-spacing: 0.5px; }
+        #dialogue-box { font-size: 13px; color: #ff00ff; font-style: italic; margin-bottom: 15px; min-height: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,17 +37,29 @@
 
     <div id="modal">
         <div class="card" id="modal-content">
-            <h2 style="color:#f00; margin-top:0;">EROBLACK STRIKE</h2>
-            <p>Touye 100 avion lènmi sou 105. Chak bezwen 7 bal!</p>
+            <h2 style="color:#f00; margin-top:0; margin-bottom:5px;">EROBLACK STRIKE</h2>
+            <p style="margin-top:0; font-size:14px;">Touye 100 avion lènmi sou 105. Chak bezwen 7 bal!</p>
+            
+            <!-- Ti dyalòg k ap kominike ak jwè a -->
+            <div id="dialogue-box">Kòmandan: "Chwazi yon miz pou n dekole misyon an!"</div>
+
             <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
             
-            <!-- Yo ajoute oninput la pou kalkile kòb la otomatikman -->
-            <input type="number" id="miz-input" value="10" oninput="KalkileKòb()">
+            <!-- ID Chanje an edittextPeye jan ou te mande l la -->
+            <input type="number" id="edittextPeye" value="10" oninput="KalkileKòb()">
             
-            <!-- Men ti fraz enfòmasyon pou jwè a -->
+            <!-- 5 Bouton Miz rapid yo -->
+            <div class="miz-buttons-container">
+                <button class="btn-miz" onclick="ChwaziMiz(1)">1 HTG</button>
+                <button class="btn-miz" onclick="ChwaziMiz(5)">5 HTG</button>
+                <button class="btn-miz" onclick="ChwaziMiz(10)">10 HTG</button>
+                <button class="btn-miz" onclick="ChwaziMiz(15)">15 HTG</button>
+                <button class="btn-miz" onclick="ChwaziMiz(25)">25 HTG</button>
+            </div>
+            
             <p id="fraz-miz">Ou mize 10 HTG, siw genyen wap fè 100 HTG!</p>
             
-            <button onclick="startGame()">LANCE MISYON</button>
+            <button class="btn-lanse" onclick="startGame()">LANCE MISYON</button>
         </div>
     </div>
 
@@ -72,9 +91,33 @@
         });
     }
 
-    // Fonksyon ki chanje tèks la dinamikman lè jwè a ap tape
+    // Lis fraz dyalòg selon sitiyasyon yo
+    const dyalogMiz = [
+        'Kòmandan: "Bèl chwa! Avyon an pare pou konba."',
+        'Kòmandan: "Miz sa a lou! Pare pou w rache viktwa a."',
+        'Kòmandan: "Lènmi yo pap konprann anyen la! Ann al jwe."',
+        'Kòmandan: "Pilòt, estrateji sa a sanble bon. Parat tèt ou!"'
+    ];
+
+    const dyalogLanse = [
+        'Kòmandan: "Misyon lanse! Pa kite okenn avyon pase!"',
+        'Kòmandan: "Atak la kòmanse! Tire san gad dèyè!"'
+    ];
+
+    function BayDyalog(lis) {
+        let n = Math.floor(Math.random() * lis.length);
+        document.getElementById('dialogue-box').innerText = lis[n];
+    }
+
+    // Lè jwè a klike sou yon bouton miz rapid
+    function ChwaziMiz(valè) {
+        document.getElementById('edittextPeye').value = valè;
+        KalkileKòb();
+        BayDyalog(dyalogMiz);
+    }
+
     function KalkileKòb() {
-        let miz = document.getElementById('miz-input').value;
+        let miz = document.getElementById('edittextPeye').value;
         if(miz < 0 || miz === "") miz = 0;
         let potansyel = miz * 10;
         document.getElementById('fraz-miz').innerText = `Ou mize ${miz} HTG, siw genyen wap fè ${potansyel} HTG!`;
@@ -85,14 +128,23 @@
     }
 
     function startGame() {
-        mizFinal = document.getElementById('miz-input').value;
-        if(mizFinal <= 0 || mizFinal === "") return;
+        mizFinal = document.getElementById('edittextPeye').value;
+        if(mizFinal <= 0 || mizFinal === "") {
+            document.getElementById('dialogue-box').innerText = 'Kòmandan: "Antre yon miz valab anvan nou dekole!"';
+            return;
+        }
         sendToApp("peye", mizFinal);
         sendToApp("genyen", "0");
-        document.getElementById('modal').style.display = "none";
-        gameActive = true;
-        spawnEnemy();
-        update();
+        
+        BayDyalog(dyalogLanse);
+        
+        // Kite modal la vizib yon ti fraksyon segonn pou wè dyalòg la anvan l disparèt
+        setTimeout(() => {
+            document.getElementById('modal').style.display = "none";
+            gameActive = true;
+            spawnEnemy();
+            update();
+        }, 600);
     }
 
     function spawnEnemy() {
@@ -217,12 +269,22 @@
         let gain = won ? (mizFinal * 10) : 0;
         sendToApp("genyen", gain);
 
+        // Mesaj dyalòg final la pou siksè oubyen defèt
+        let teksDyalog = won 
+            ? 'Kòmandan: "Ezekisyon pafè! Ou rache viktwa a epi ou sekirize kòb la!"' 
+            : 'Kòmandan: "Misyon echwe, yo te twòp pou nou! Al prepare w pou revanch lan."';
+
         document.getElementById('modal').style.display = "flex";
         document.getElementById('modal-content').innerHTML = `
             <h1 style="color:${won ? '#0f0' : '#f00'}">${won ? 'MISYON REYISI!' : 'OU PÈDI!'}</h1>
+            <p style="font-size:13px; color:#ff00ff; font-style:italic; font-weight:bold; margin-bottom:15px;">${teksDyalog}</p>
             <p>Ou detwi ${score} avyon sou ${TOTAL_ENEMIES}</p>
-            <h2 style="background:#000; padding:15px; border-radius:10px; color:#fff;">GANY: ${gain} HTG</h2>
-            <button onclick="location.reload()">REKÒMANSE</button>
+            
+            <!-- Input envizib sa a la pou sistèm Android ou a ka li ID edittextGenyen an san pwoblèm -->
+            <input type="text" id="edittextGenyen" value="${gain}" style="display:none;">
+            
+            <h2 style="background:#000; padding:15px; border-radius:10px; color:#fff; margin-top:5px;">GANY: ${gain} HTG</h2>
+            <button class="btn-lanse" onclick="location.reload()">REKÒMANSE</button>
         `;
     }
 </script>
