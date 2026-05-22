@@ -16,6 +16,7 @@
         .card { width: 85%; background: #111; border: 2px solid #f00; border-radius: 20px; padding: 25px; box-shadow: 0 0 20px #f00; }
         input { width: 90%; padding: 15px; margin: 15px 0; background: #000; border: 1px solid #555; color: #0f0; text-align: center; font-size: 24px; border-radius: 10px; font-weight: bold; }
         button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 20px; cursor: pointer; background: linear-gradient(#f00, #900); color: #fff; text-transform: uppercase; }
+        #fraz-miz { font-size: 15px; color: #ffff00; font-weight: bold; margin: 15px 0; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -32,7 +33,13 @@
             <h2 style="color:#f00; margin-top:0;">EROBLACK STRIKE</h2>
             <p>Touye 100 avion lènmi sou 105. Chak bezwen 7 bal!</p>
             <label style="font-size:12px; color:#888;">ANTRE MIZ OU (HTG)</label>
-            <input type="number" id="miz-input" value="10">
+            
+            <!-- Yo ajoute oninput la pou kalkile kòb la otomatikman -->
+            <input type="number" id="miz-input" value="10" oninput="KalkileKòb()">
+            
+            <!-- Men ti fraz enfòmasyon pou jwè a -->
+            <p id="fraz-miz">Ou mize 10 HTG, siw genyen wap fè 100 HTG!</p>
+            
             <button onclick="startGame()">LANCE MISYON</button>
         </div>
     </div>
@@ -48,7 +55,7 @@
     let enemiesFinished = 0;
     let gameActive = false;
     let mizFinal = 0;
-    const TOTAL_ENEMIES = 105; // CHANJE SOU 105
+    const TOTAL_ENEMIES = 105; 
     const TARGET = 100;
 
     let player = { x: canvas.width/2, y: canvas.height - 100 };
@@ -65,13 +72,21 @@
         });
     }
 
+    // Fonksyon ki chanje tèks la dinamikman lè jwè a ap tape
+    function KalkileKòb() {
+        let miz = document.getElementById('miz-input').value;
+        if(miz < 0 || miz === "") miz = 0;
+        let potansyel = miz * 10;
+        document.getElementById('fraz-miz').innerText = `Ou mize ${miz} HTG, siw genyen wap fè ${potansyel} HTG!`;
+    }
+
     function sendToApp(bwat, val) {
         if (window.Android) { window.Android.voyeKòb(bwat, val.toString()); }
     }
 
     function startGame() {
         mizFinal = document.getElementById('miz-input').value;
-        if(mizFinal <= 0) return;
+        if(mizFinal <= 0 || mizFinal === "") return;
         sendToApp("peye", mizFinal);
         sendToApp("genyen", "0");
         document.getElementById('modal').style.display = "none";
